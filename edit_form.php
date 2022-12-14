@@ -109,6 +109,11 @@ class block_completion_progress_edit_form extends block_edit_form {
                            get_string('config_percentage', 'block_completion_progress'));
         $mform->setDefault('config_showpercentage', defaults::SHOWPERCENTAGE);
         $mform->addHelpButton('config_showpercentage', 'why_show_precentage', 'block_completion_progress');
+           // Allow showing overdue information.
+           $mform->addElement('selectyesno', 'config_showoverdue',
+           get_string('config_overdue', 'block_completion_progress'));
+$mform->setDefault('config_showoverdue', defaults::SHOWOVERDUE);
+$mform->addHelpButton('config_showoverdue', 'why_show_overdue', 'block_completion_progress');
 
         // Allow the block to be visible to a single group or grouping.
         $groups = groups_get_all_groups($COURSE->id);

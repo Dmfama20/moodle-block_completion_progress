@@ -53,7 +53,11 @@ class renderer extends plugin_renderer_base {
         $courseid = $progress->get_course()->id;
         $instance = $progress->get_block_instance()->id;
         $simple = $progress->is_simple_bar();
-
+        $blockmode  = $progress->is_for_block_use();
+        $showoverdue = $config->showoverdue ?? defaults::SHOWOVERDUE;
+        if($showoverdue && !$blockmode) {
+            $completiondates = $progress->get_completion_dates();
+        }
         $content = '';
         $now = time();
         $usingrtl = right_to_left();
@@ -258,6 +262,9 @@ class renderer extends plugin_renderer_base {
 
         foreach ($activities as $activity) {
             $completed = $completions[$activity->id] ?? null;
+            if($showoverdue && !$blockmode) {
+                $timedone = $completiondates[$activity->id] ?? 0 ; 
+            }
             $divoptions = array('class' => 'progressEventInfo',
                                 'id' => 'progressBarInfo'.$instance.'-'.$userid.'-'.$activity->id,
                                 'style' => 'display: none;');
@@ -275,13 +282,29 @@ class renderer extends plugin_renderer_base {
             $content .= html_writer::empty_tag('br');
             $altattribute = '';
             if ($completed == COMPLETION_COMPLETE) {
+                   // Check for overdue
+                   if(!$blockmode && $showoverdue && $activity->expected != 0 && $activity->expected < $timedone) {
+                    $content .=get_string('overdue', 'block_completion_progress').$progress->get_overdue_time($activity->expected,$timedone).'&nbsp;';
+                    $icon = 'overdue';
+                    $altattribute = $strcomplete;
+                }
+                else {
                 $content .= $strcomplete.'&nbsp;';
                 $icon = 'tick';
                 $altattribute = $strcomplete;
+            }
             } else if ($completed == COMPLETION_COMPLETE_PASS) {
+                 // Check for overdue
+                 if(!$blockmode && $showoverdue && $activity->expected != 0 && $activity->expected < $timedone) {
+                    $content .=get_string('overdue', 'block_completion_progress').$progress->get_overdue_time($activity->expected,$timedone).'&nbsp;';
+                    $icon = 'overdue';
+                    $altattribute = $strcomplete;
+                }
+                else {
                 $content .= $strpassed.'&nbsp;';
                 $icon = 'tick';
                 $altattribute = $strpassed;
+            }
             } else if ($completed == COMPLETION_COMPLETE_FAIL) {
                 $content .= $strfailed.'&nbsp;';
                 $icon = 'cross';

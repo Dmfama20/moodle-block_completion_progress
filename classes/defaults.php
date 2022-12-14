@@ -73,6 +73,10 @@ abstract class defaults {
      * Default cell sort order mode: orderbytime or orderbycourse.
      */
     const ORDERBY = 'orderbytime';
+       /**
+     * Default display of overdue infomration in block.
+     */
+    const SHOWOVERDUE = 0;
 
     /**
      * Default display of progress percentage in block.

@@ -138,6 +138,13 @@ class completion_progress implements \renderable {
      * @var boolean
      */
     protected $simplebar = false;
+       /**
+     * Block mode, .
+     * @var boolean
+     */
+    protected $blockmode = false;
+
+
 
     /**
      * Constructor.
@@ -189,6 +196,21 @@ class completion_progress implements \renderable {
         $this->load_completions();
 
         return $this;
+    }
+    /**
+     * Specialise for block use.
+     * @return self
+     */
+    public function for_block_use() {
+        $this->blockmode = true;
+        return $this;
+    }
+     /**
+     * Return the block use.
+     * @return boolean
+     */
+    public function is_for_block_use(): bool {
+        return $this->blockmode;
     }
 
     /**
@@ -378,6 +400,56 @@ class completion_progress implements \renderable {
         }
 
         return (int)round(100 * $completecount / count($this->visibleactivities));
+    }
+      /**
+     * Get user activity completion states.
+     * @return array An array of all existing completion dates by activity id for the given user.
+     */
+    public function get_completion_dates() {
+        global $DB;
+        if ($this->completions === null) {
+            throw new coding_exception('completions not computed until for_user() or for_overview() is called');
+        }
+        if ($this->user) {
+            // Filter to visible activities and fill in gaps.
+            $completions = $this->completions[$this->user->id] ?? [];
+            $completion = new completion_info($this->course);
+            $ret = [];
+             $cm = new stdClass();
+
+            foreach ($this->visibleactivities as $activity) {
+                $data= $DB->get_record('course_modules_completion',['coursemoduleid'=>$activity->id,'userid'=>$this->user->id ]);
+                if($data)   {
+                    if($data->timemodified > 0 ) {
+                        $ret[$activity->id] = $data->timemodified;
+                        }
+                }
+                
+            }
+            return $ret;
+        } else {
+            throw new coding_exception('unimplemented');
+        }
+    }
+    public function get_overdue_time($expected, $done) {
+      $overdue = $done - $expected;
+        //Overdue less than an hour
+      if ($overdue < 3600) {
+        $val= floor($overdue/60);
+        $ret = strval($val)." min";
+      }
+        //Overdue more than an hour but less than a day
+      elseif ($overdue >= 3600 && $overdue < 86400) {
+        $val= floor($overdue/3600);
+        $ret = strval($val)." h";
+      }
+    // Overdue longer than a day
+    else {
+        $val= floor($overdue/86400);
+        $ret = strval($val)." d";
+
+     }
+     return $ret;
     }
 
     /**
